@@ -5,8 +5,11 @@
 package it.polito.tdp.yelp;
 
 import java.net.URL;
+import java.time.Year;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.yelp.model.Business;
 import it.polito.tdp.yelp.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,33 +38,54 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbCitta"
-    private ComboBox<?> cmbCitta; // Value injected by FXMLLoader
+    private ComboBox<String> cmbCitta; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtX"
     private TextField txtX; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbAnno"
-    private ComboBox<?> cmbAnno; // Value injected by FXMLLoader
+    private ComboBox<Year> cmbAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbLocale"
-    private ComboBox<?> cmbLocale; // Value injected by FXMLLoader
+    private ComboBox<Business> cmbLocale; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
+    	Business partenza = this.cmbLocale.getValue();
+    	Business arrivo = this.model.getLocaleMigliore();
+    	double soglia = Double.parseDouble(txtX.getText());
+    	//aggiungere controlli
     	
+    	List<Business> percorso = this.model.percorsoMigliore(partenza, arrivo, soglia);
+    	
+    	this.txtResult.appendText("\n\nPercorso migliore: \n" + percorso.toString());
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	String citta = this.cmbCitta.getValue();
+    	Year anno = this.cmbAnno.getValue();
+    	
+    	if(citta == null || anno == null) {
+    		this.txtResult.appendText("Parametri obbligatori");
+    		return;
+    	}
+    	
+    	String msg = this.model.creaGrafo(citta, anno);
+    	this.txtResult.appendText(msg);
+    	
+    	this.cmbLocale.getItems().clear();
+    	this.cmbLocale.getItems().addAll(this.model.getVertici());
     }
 
     @FXML
     void doLocaleMigliore(ActionEvent event) {
-
+    	Business best = this.model.getLocaleMigliore();
+    
+    	this.txtResult.appendText("\nLocale migliore: " + best.getBusinessName());
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -78,5 +102,11 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	this.cmbCitta.getItems().addAll(this.model.getAllCities());
+    	
+    	for(int anno=2005; anno<=2013; anno++) {
+    		this.cmbAnno.getItems().add(Year.of(anno));
+    	}
     }
 }
